@@ -1,0 +1,65 @@
+# Copy .env.example to .env and change the secrets before exposing this publicly.
+services:
+  postgres:
+    image: postgres:16
+    container_name: lms_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-lms}
+      POSTGRES_USER: ${POSTGRES_USER:-lms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lms12345}
+    ports:
+      - "${POSTGRES_PORT:-5434}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-lms} -d ${POSTGRES_DB:-lms}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    container_name: lms_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-lms}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-lms}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-lms12345}
+      JWT_SECRET: ${JWT_SECRET:-lms-development-secret-key-change-me-at-least-32-bytes}
+      APP_PLATFORM_NAME: ${PLATFORM_NAME:-Akademi LMS}
+      # Public URL of the frontend: used for payment redirects (Midtrans finish URL / simulator page).
+      APP_FRONTEND_URL: ${APP_FRONTEND_URL:-http://localhost:8082}
+      APP_ADMIN_EMAIL: ${APP_ADMIN_EMAIL:-admin@lms.local}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:-admin12345}
+      APP_SEED_DEMO: ${APP_SEED_DEMO:-true}
+      APP_ALLOW_INSTRUCTOR_SIGNUP: ${APP_ALLOW_INSTRUCTOR_SIGNUP:-true}
+      APP_PAYMENT_SIMULATOR: ${APP_PAYMENT_SIMULATOR:-true}
+      MIDTRANS_SERVER_KEY: ${MIDTRANS_SERVER_KEY:-}
+      MIDTRANS_PRODUCTION: ${MIDTRANS_PRODUCTION:-false}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_UPLOAD_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
+    ports:
+      - "${BACKEND_PORT:-8081}:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_PLATFORM_NAME: ${PLATFORM_NAME:-Akademi LMS}
+    container_name: lms_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8082}:80"
+
+volumes:
+  postgres_data:
+  uploads_data:

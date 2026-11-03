@@ -1,0 +1,60 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: lms-backend
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/lms}
+    username: ${SPRING_DATASOURCE_USERNAME:lms}
+    password: ${SPRING_DATASOURCE_PASSWORD:lms12345}
+  jpa:
+    hibernate:
+      ddl-auto: none   # schema is owned by Flyway (src/main/resources/db/migration)
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  platform-name: ${APP_PLATFORM_NAME:Akademi LMS}
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  timezone: ${APP_TIMEZONE:Asia/Jakarta}
+  upload-dir: ${APP_UPLOAD_DIR:./uploads}
+  allow-instructor-signup: ${APP_ALLOW_INSTRUCTOR_SIGNUP:true}
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173,http://localhost:8082}
+  seed:
+    admin-email: ${APP_ADMIN_EMAIL:admin@lms.local}
+    admin-password: ${APP_ADMIN_PASSWORD:admin12345}
+    demo-data: ${APP_SEED_DEMO:true}
+  payment:
+    # Leave the server key empty in development to use the built-in payment simulator.
+    simulator-enabled: ${APP_PAYMENT_SIMULATOR:true}
+    midtrans:
+      server-key: ${MIDTRANS_SERVER_KEY:}
+      production: ${MIDTRANS_PRODUCTION:false}
+  jwt:
+    secret: ${JWT_SECRET:lms-development-secret-key-change-me-at-least-32-bytes}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}

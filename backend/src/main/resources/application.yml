@@ -6,7 +6,7 @@ spring:
   application:
     name: lms-backend
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/lms}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5434/lms}
     username: ${SPRING_DATASOURCE_USERNAME:lms}
     password: ${SPRING_DATASOURCE_PASSWORD:lms12345}
   jpa:
